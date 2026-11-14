@@ -52,8 +52,8 @@
   --text-hero: clamp(2.25rem, 1.7rem + 2.4vw, 3rem); /* the name: 36–48px */
   --text-hero-title: clamp(1.375rem, 1.05rem + 1.4vw, 2rem); /* the title: 22–32px */
 
-  --radius-card: 14px; /* project cards */
-  --radius-media: 8px; /* screenshots, videos, pubmats */
+  --radius-card: 14px; /* project cards, pubmats */
+  --radius-media: 8px; /* screenshots, videos */
 
   --ease-*: initial;
   --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);

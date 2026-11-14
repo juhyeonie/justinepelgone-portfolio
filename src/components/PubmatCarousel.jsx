@@ -74,7 +74,7 @@ export default function PubmatCarousel({ pubmats }) {
             <button
               key={pubmat.src}
               type="button"
-              className={`relative col-start-1 row-start-1 w-[min(380px,54%)] rounded-media border border-border bg-surface max-md:w-[min(340px,58%)] max-sm:w-[76%] ${cardClass}`}
+              className={`relative col-start-1 row-start-1 w-[min(380px,54%)] rounded-card border border-border bg-surface max-md:w-[min(340px,58%)] max-sm:w-[76%] ${cardClass}`}
               data-position={position}
               // Images further back wait behind the side ones, so they slide in from
               // there and never stick out past the edge of the page.
@@ -91,7 +91,7 @@ export default function PubmatCarousel({ pubmats }) {
               }
             >
               <img
-                className="pointer-events-none size-full rounded-[calc(var(--radius-media)-1px)] object-contain"
+                className="pointer-events-none size-full rounded-[calc(var(--radius-card)-1px)] object-contain"
                 src={pubmat.thumb}
                 alt=""
                 width={pubmat.width}
