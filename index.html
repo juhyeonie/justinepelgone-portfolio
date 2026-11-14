@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Justine Pelgone — Developer &amp; UI/UX Designer</title>
+    <meta
+      name="description"
+      content="Portfolio of Justine Pelgone, a Computer Science student focused on frontend development and UI/UX design."
+    />
+    <!-- The full portrait, head and shoulders, on white (made from public/portrait.png). -->
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Apply the saved appearance before first paint to avoid a theme flash.
+         Light is the default; "system" follows the device. Mirrors useTheme.js. -->
+    <script>
+      (function () {
+        var theme = 'light';
+        try {
+          var saved = localStorage.getItem('jp-portfolio-theme');
+          if (saved === 'dark' || saved === 'light') theme = saved;
+          else if (saved === 'system') {
+            theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+          }
+        } catch (error) {
+          /* storage unavailable: keep the default */
+        }
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.classList.add('js');
+      })();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Intro / loading screen.
+         Its styles are inlined so it can paint before the app bundle arrives, and
+         it uses no JavaScript framework: markup + CSS here, plus the small script
+         after the markup below. The app dismisses it (see hooks/useAppReady.js).
+         The pixel character walking in its corner is styled in
+         src/styles/index.css, with the other site styles.
+
+         It covers real loading, and on the first visit of a browser session it also
+         stays up for at least 3 seconds (MIN_VISIBLE_MS below), so the intro is
+         seen. It leaves once both are true: the page is ready and that minimum has
+         passed. It never leaves before the page is ready. Later page loads in the
+         same session leave as soon as the page is ready. -->
+    <style>
+      .is-loading {
+        overflow: hidden; /* the page behind must not scroll while the intro is up */
+      }
+
+      .intro {
+        --intro-pad: clamp(20px, 5vw, 56px);
+        --intro-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+        position: fixed;
+        inset: 0;
+        z-index: 100;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        padding: var(--intro-pad);
+        padding-bottom: calc(var(--intro-pad) + env(safe-area-inset-bottom, 0px));
+        background: #ffffff;
+        color: #0a0a0a;
+        font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        overflow: hidden;
+        /* A hairline along the bottom edge, so the panel reads as a sheet lifting
+           off the page as it leaves (the page behind is the same color). */
+        box-shadow: 0 1px 0 rgba(128, 128, 128, 0.3);
+      }
+      [data-theme='dark'] .intro {
+        background: #0c0c0f; /* matches --bg for the dark theme in src/styles/index.css */
+        color: #ffffff;
+      }
+
+      .intro-label {
+        font-family: 'DM Mono', ui-monospace, Menlo, Consolas, monospace;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0.6;
+      }
+
+      /* ── Top row: label and a small mark ── */
+      .intro-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .intro-mark {
+        width: 7px;
+        height: 7px;
+        background: currentColor;
+      }
+
+      /* ── Middle: the name, a rule that draws across, the title ── */
+      .intro-main {
+        display: grid;
+        align-content: end;
+        gap: clamp(14px, 2.2vw, 24px);
+        padding-bottom: clamp(28px, 7vh, 72px);
+      }
+      .intro-name {
+        margin: 0;
+        font-size: clamp(2.75rem, 11.5vw, 7.5rem);
+        font-weight: 700;
+        letter-spacing: -0.045em;
+        line-height: 0.98;
+      }
+      /* Each line of the name is a window; its text rises into view from below. */
+      .intro-line {
+        display: block;
+        padding-bottom: 0.08em; /* room for descenders inside the clipping window */
+        overflow: hidden;
+      }
+      .intro-line > span {
+        display: block;
+      }
+      .intro-rule {
+        height: 1px;
+        background: currentColor;
+        opacity: 0.18;
+        transform-origin: left;
+      }
+      .intro-title {
+        margin: 0;
+        font-size: clamp(0.95rem, 1.9vw, 1.25rem);
+        letter-spacing: -0.01em;
+        opacity: 0.6;
+      }
+
+      /* ── Bottom: loading indicator ── */
+      .intro-status {
+        display: grid;
+        gap: 12px;
+      }
+      .intro-status-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      /* A hairline with a short segment travelling along it. It shows activity
+         without claiming a percentage the page cannot actually know. */
+      .intro-track {
+        position: relative;
+        height: 1px;
+        background: rgba(128, 128, 128, 0.28);
+        overflow: hidden;
+      }
+      .intro-track::after {
+        content: '';
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 18%;
+        background: currentColor;
+        animation: intro-travel 1.7s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+      }
+      .intro-pulse {
+        width: 5px;
+        height: 5px;
+        background: currentColor;
+        animation: intro-pulse 1.7s ease-in-out infinite;
+      }
+
+      /* ── Entrance. Held back until the web fonts are in (data-fonts="ready"), so
+         the name is never seen in a fallback font and then swapped. The steps are
+         one sequence: labels, name line 1, line 2, the rule, then the title. ── */
+      .intro-label,
+      .intro-title,
+      .intro-mark {
+        opacity: 0;
+      }
+      .intro-line > span {
+        transform: translateY(108%);
+      }
+      .intro-rule {
+        transform: scaleX(0);
+      }
+
+      .intro[data-fonts='ready'] .intro-label {
+        animation: intro-fade-label 0.5s ease-out forwards;
+      }
+      .intro[data-fonts='ready'] .intro-mark {
+        animation: intro-fade 0.5s ease-out forwards;
+      }
+      .intro[data-fonts='ready'] .intro-line > span {
+        animation: intro-rise 0.85s var(--intro-ease) 0.08s forwards;
+      }
+      .intro[data-fonts='ready'] .intro-line + .intro-line > span {
+        animation-delay: 0.17s;
+      }
+      .intro[data-fonts='ready'] .intro-rule {
+        animation: intro-draw 0.9s var(--intro-ease) 0.35s forwards;
+      }
+      .intro[data-fonts='ready'] .intro-title {
+        animation: intro-rise-fade 0.7s var(--intro-ease) 0.5s forwards;
+      }
+
+      /* ── Exit. The content lifts away first, then the whole panel slides up like
+         a cover sheet, revealing the homepage already rendered beneath it. ── */
+      .intro.is-leaving {
+        pointer-events: none;
+        transform: translateY(-100%);
+        transition: transform 0.8s cubic-bezier(0.76, 0, 0.24, 1) 0.12s;
+      }
+      .intro.is-leaving .intro-top,
+      .intro.is-leaving .intro-main,
+      .intro.is-leaving .intro-status {
+        opacity: 0;
+        transform: translateY(-18px);
+        transition:
+          opacity 0.35s ease-out,
+          transform 0.5s var(--intro-ease);
+      }
+
+      /* Quick exit: for a page that was ready almost at once (nothing worth
+         staging), and for reduced motion. A plain, short fade. */
+      .intro.is-leaving-quick {
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.22s ease-out;
+      }
+
+      /* ── Failure state: shown instead of leaving a visitor on a stuck screen ── */
+      .intro-error {
+        display: none;
+        gap: 14px;
+        justify-items: start;
+        max-width: 34ch;
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+      .intro-error p {
+        margin: 0;
+      }
+      .intro-error button {
+        padding: 8px 16px;
+        border: 1px solid currentColor;
+        border-radius: 999px;
+        background: none;
+        color: inherit;
+        font: inherit;
+        font-size: 0.8125rem;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .intro[data-state='error'] .intro-error {
+        display: grid;
+      }
+      .intro[data-state='error'] .intro-status {
+        display: none;
+      }
+
+      @keyframes intro-fade {
+        to {
+          opacity: 1;
+        }
+      }
+      @keyframes intro-fade-label {
+        to {
+          opacity: 0.6;
+        }
+      }
+      @keyframes intro-rise {
+        to {
+          transform: none;
+        }
+      }
+      @keyframes intro-rise-fade {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 0.6;
+          transform: none;
+        }
+      }
+      @keyframes intro-draw {
+        to {
+          transform: scaleX(1);
+        }
+      }
+      @keyframes intro-travel {
+        from {
+          transform: translateX(-100%);
+        }
+        to {
+          transform: translateX(556%); /* 100% of the track ÷ the segment's 18% width */
+        }
+      }
+      @keyframes intro-pulse {
+        50% {
+          opacity: 0.2;
+        }
+      }
+
+      /* Reduced motion: everything is simply present; nothing moves. */
+      @media (prefers-reduced-motion: reduce) {
+        .intro *,
+        .intro *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+        .intro-label,
+        .intro-title {
+          opacity: 0.6;
+        }
+        .intro-mark {
+          opacity: 1;
+        }
+        .intro-line > span,
+        .intro-rule {
+          transform: none;
+        }
+        .intro-track::after {
+          width: 100%;
+          opacity: 0.35;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-bg font-sans text-base leading-[1.65] text-fg antialiased [text-rendering:optimizeLegibility]">
+    <div class="intro" id="loader" role="status" aria-label="Loading portfolio">
+      <div class="intro-top" aria-hidden="true">
+        <span class="intro-label">Portfolio / <span id="intro-year"></span></span>
+        <span class="intro-mark"></span>
+      </div>
+
+      <div class="intro-main">
+        <p class="intro-name" aria-hidden="true">
+          <span class="intro-line"><span>Justine</span></span>
+          <span class="intro-line"><span>Pelgone</span></span>
+        </p>
+        <div class="intro-rule" aria-hidden="true"></div>
+        <p class="intro-title" aria-hidden="true">Developer &amp; UI/UX Designer</p>
+
+        <div class="intro-error" role="alert">
+          <p>The portfolio couldn't finish loading. Check your connection and try again.</p>
+          <button type="button" onclick="location.reload()">Reload</button>
+        </div>
+      </div>
+
+      <div class="intro-status" aria-hidden="true">
+        <span class="intro-label intro-status-label">
+          <span class="intro-pulse"></span>
+          Loading
+        </span>
+        <div class="intro-track"></div>
+      </div>
+
+      <div class="intro-walker" aria-hidden="true"></div>
+    </div>
+
+    <script>
+      // Intro controller. Exposes window.__intro for the app:
+      //   dismiss()  play the exit and remove the intro; returns the exit's length in ms
+      //   fail()     replace the indicator with a short message and a Reload button
+      (function () {
+        var intro = document.getElementById('loader');
+        var root = document.documentElement;
+        var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        var FONT_WAIT_LIMIT_MS = 700; // then reveal the text in fallback fonts anyway
+        var QUICK_EXIT_BEFORE_MS = 450; // ready sooner than this: skip the staged exit
+        var STAGED_EXIT_MS = 920; // matches .intro.is-leaving (0.12s delay + 0.8s)
+        var QUICK_EXIT_MS = 220; // matches .intro.is-leaving-quick
+        var STUCK_AFTER_MS = 12000;
+        var MIN_VISIBLE_MS = 3000; // first visit of a session: shown at least this long
+        var SEEN_KEY = 'jp-intro-seen'; // sessionStorage: the intro has been shown
+
+        var isDone = false;
+
+        // Only the first visit of a browser session holds the intro; a reload or a
+        // return to the page in the same session does not make anyone wait again.
+        var minVisibleMs = MIN_VISIBLE_MS;
+        try {
+          if (sessionStorage.getItem(SEEN_KEY)) minVisibleMs = 0;
+        } catch (error) {
+          // Storage blocked: treat it as a first visit.
+        }
+
+        // The minimum is measured from the intro's first frame on screen.
+        var shownAt = performance.now();
+        if (window.requestAnimationFrame) {
+          requestAnimationFrame(function () {
+            shownAt = performance.now();
+          });
+        }
+
+        root.classList.add('is-loading');
+        document.getElementById('intro-year').textContent = new Date().getFullYear();
+
+        // Start the text reveal once the fonts it uses have loaded.
+        function revealText() {
+          intro.setAttribute('data-fonts', 'ready');
+        }
+        if (document.fonts && document.fonts.load) {
+          Promise.all([
+            document.fonts.load('700 1em Manrope'),
+            document.fonts.load('400 1em Manrope'),
+            document.fonts.load('400 1em "DM Mono"'),
+          ]).then(revealText, revealText);
+          setTimeout(revealText, FONT_WAIT_LIMIT_MS);
+        } else {
+          revealText();
+        }
+
+        // Called once the page is ready. If the minimum display time has not passed
+        // yet, the exit waits for it. Returns the time until the intro is gone
+        // (the wait plus the exit), so the app knows when the page is uncovered.
+        function dismiss() {
+          if (isDone) return 0;
+          isDone = true;
+
+          var waitMs = Math.max(0, minVisibleMs - (performance.now() - shownAt));
+          // A page that was ready almost at once has no staged exit to play, unless
+          // the intro was held: then it ends with its full exit.
+          var isQuick =
+            reducedMotion || (waitMs === 0 && performance.now() < QUICK_EXIT_BEFORE_MS);
+          var duration = isQuick ? QUICK_EXIT_MS : STAGED_EXIT_MS;
+
+          setTimeout(function () {
+            try {
+              sessionStorage.setItem(SEEN_KEY, '1');
+            } catch (error) {
+              // Storage blocked: the next visit simply holds the intro again.
+            }
+            root.classList.remove('is-loading');
+            intro.classList.add(isQuick ? 'is-leaving-quick' : 'is-leaving');
+            setTimeout(function () {
+              intro.remove();
+            }, duration);
+          }, waitMs);
+
+          return waitMs + duration;
+        }
+
+        function fail() {
+          if (isDone) return;
+          isDone = true;
+          root.classList.remove('is-loading');
+          intro.setAttribute('data-fonts', 'ready');
+          intro.setAttribute('data-state', 'error');
+        }
+
+        // Never leave a visitor on a stuck screen.
+        // 1. The app's script failed to download.
+        window.addEventListener(
+          'error',
+          function (event) {
+            var target = event.target;
+            if (target && target.tagName === 'SCRIPT' && target.type === 'module') fail();
+          },
+          true,
+        );
+        // 2. Nothing dismissed the intro in a long time. If the app did render,
+        //    show it; if the page is still empty, say so.
+        setTimeout(function () {
+          if (isDone) return;
+          if (document.getElementById('root').childElementCount > 0) dismiss();
+          else fail();
+        }, STUCK_AFTER_MS);
+
+        window.__intro = { dismiss: dismiss, fail: fail };
+      })();
+    </script>
+
+    <noscript>
+      <style>
+        .intro {
+          display: none;
+        }
+      </style>
+      This portfolio needs JavaScript enabled to display.
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+

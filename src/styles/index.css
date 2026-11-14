@@ -1,0 +1,421 @@
+/* The site's only stylesheet. Components are styled with Tailwind utility classes
+   in their markup; this file holds what those classes build on: the theme,
+   variants and shared utilities, the variables that change with the theme or the
+   screen size, keyframes, and a few page-wide rules no single element owns. */
+@import 'tailwindcss';
+
+/* ── Variants ──────────────────────────────────────────────────── */
+
+/* `hover:` applies on every device, as plain :hover does. Hover styles that must
+   not stick after a tap on a touch screen use `pointer-hover:` instead. */
+@custom-variant hover (&:hover);
+@custom-variant pointer-hover {
+  @media (hover: hover) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+/* Touch-only devices (no pointer that can hover). */
+@custom-variant touch {
+  @media (hover: none) {
+    @slot;
+  }
+}
+
+/* The theme is set on <html> as data-theme (see useTheme.js), not by media query. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* ── Theme ─────────────────────────────────────────────────────── */
+
+@theme {
+  /* sm: phones end below 600px. md: the sliders' compact sizes end at 860px.
+     lg: the desktop sidebar layout starts at 1024px. */
+  --breakpoint-*: initial;
+  --breakpoint-sm: 600px;
+  --breakpoint-md: 861px;
+  --breakpoint-lg: 1024px;
+
+  --font-*: initial;
+  --font-sans: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+
+  /* Sizes only: line-height is inherited unless a `leading-*` class sets it. */
+  --text-*: initial;
+  --text-micro: 0.6875rem; /* 11px — mono labels */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-base: 1rem; /* 16px */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.375rem; /* 22px */
+  --text-hero: clamp(2.25rem, 1.7rem + 2.4vw, 3rem); /* the name: 36–48px */
+  --text-hero-title: clamp(1.375rem, 1.05rem + 1.4vw, 2rem); /* the title: 22–32px */
+
+  --radius-card: 14px; /* project cards */
+  --radius-media: 8px; /* screenshots, videos, pubmats */
+
+  --ease-*: initial;
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  /* Sliders (projects and pubmats): a quick start that settles gently, with no
+     overshoot. */
+  --ease-slide: cubic-bezier(0.25, 1, 0.5, 1);
+
+  /* `animate-*` classes. */
+  --animate-lightbox-in: lightbox-in var(--duration) var(--ease-out); /* image preview opening */
+  --animate-tour-in: tour-in 0.3s var(--ease-out) both; /* the tour guide appearing */
+  --animate-tour-click: tour-click 0.5s var(--ease-out); /* ring spreading from a press */
+  --animate-tour-caret: tour-caret 0.9s steps(1, end) infinite; /* typing caret blink */
+  --animate-tour-pulse: tour-pulse 1.8s var(--ease-out) infinite; /* small-screen marker */
+
+  @keyframes lightbox-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes tour-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes tour-click {
+    from {
+      opacity: 0.55;
+      transform: scale(0.3);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1.4);
+    }
+  }
+
+  @keyframes tour-caret {
+    50% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes tour-pulse {
+    from {
+      opacity: 0.7;
+      transform: scale(0.4);
+    }
+    to {
+      opacity: 0;
+      transform: scale(1.5);
+    }
+  }
+}
+
+/* Colors follow the light/dark theme, so utilities read the variables below rather
+   than fixed values. The palette is monochrome on purpose: no other colors are
+   defined. */
+@theme inline {
+  --color-*: initial;
+  --color-bg: var(--bg);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-graph-0: var(--graph-0);
+  --color-graph-1: var(--graph-1);
+  --color-graph-2: var(--graph-2);
+  --color-graph-3: var(--graph-3);
+  --color-graph-4: var(--graph-4);
+  --color-white: #ffffff; /* the image preview is always dark */
+}
+
+/* ── Variables that change with the theme or the screen size ───── */
+
+:root {
+  /* Spacing and layout */
+  --sidebar-width: 256px;
+  --content-width: 760px;
+  --gutter: 32px;
+  --section-space: 88px;
+  --header-offset: 0px; /* height of the sticky top bar; 0 when the sidebar is shown */
+
+  /* Motion */
+  --duration-fast: 0.15s;
+  --duration: 0.25s;
+  --duration-slow: 0.6s;
+  --duration-theme: 0.4s; /* theme cross-fade; matches CROSS_FADE_MS in useTheme.js */
+  /* Sliders (projects and pubmats): one duration for every part of a move, so
+     cards, their fades and their shadows travel together. */
+  --duration-slide: 0.5s;
+  --duration-hover: 0.22s; /* hover lifts and zooms, independent of slide moves */
+
+  /* Tour guide: a Figma-style collaborator cursor. One solid color for the pointer
+     and its chat bubble, with contrasting text. It follows the monochrome theme
+     (black on light, white on dark); set --tour-bg to any color to give the
+     cursor its own identity, as Figma does per collaborator. */
+  --tour-bg: var(--fg);
+  --tour-fg: var(--bg);
+  --tour-muted: color-mix(in srgb, var(--tour-fg) 68%, var(--tour-bg));
+  --tour-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+
+  /* The hero portrait's figure: a soft shadow under it on light pages, and on dark
+     pages a hairline tracing the cut-out's own edge, since its black hair would
+     otherwise vanish into the page. */
+  --figure-shadow: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.14));
+  --figure-outline: drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.6))
+    drop-shadow(0 0 0.6px rgba(255, 255, 255, 0.35));
+}
+
+:root,
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: #ffffff;
+  --fg: #0a0a0a;
+  --muted: #696969;
+  --surface: #fafafa;
+  --surface-strong: #f2f2f2;
+  --border: #e9e9e9;
+  --border-strong: #cfcfcf;
+  --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 14px 36px -12px rgba(0, 0, 0, 0.14);
+  --graph-0: #eeeeee;
+  --graph-1: #c8c8c8;
+  --graph-2: #969696;
+  --graph-3: #575757;
+  --graph-4: #0a0a0a;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  /* The dark background is a near-black with a slight cool cast; the surfaces and
+     borders below are stepped up from it and carry the same cast. The loading
+     screen in index.html uses the same background value. */
+  --bg: #0c0c0f;
+  --fg: #ffffff;
+  --muted: #a3a3a3;
+  --surface: #131317;
+  --surface-strong: #1c1c21;
+  --border: #25252a;
+  --border-strong: #3e3e45;
+  --card-shadow: 0 14px 36px -12px rgba(0, 0, 0, 0.7);
+  --graph-0: #1c1c21;
+  --graph-1: #3d3d3d;
+  --graph-2: #6e6e6e;
+  --graph-3: #adadad;
+  --graph-4: #ffffff;
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --header-offset: 56px;
+    --section-space: 72px;
+    --gutter: 24px;
+  }
+}
+
+@media (max-width: 599px) {
+  :root {
+    --section-space: 56px;
+    --gutter: 20px;
+  }
+}
+
+/* ── Page-wide rules ───────────────────────────────────────────── */
+
+/* On top of Tailwind's own reset (Preflight). */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: var(--header-offset);
+    -webkit-tap-highlight-color: initial; /* Preflight turns tap highlights off */
+  }
+
+  svg {
+    max-width: 100%;
+  }
+
+  button {
+    cursor: pointer; /* Preflight resets buttons to the default arrow */
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--fg);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--fg);
+    color: var(--bg);
+  }
+
+  /* While the mobile menu or the image preview is open, the page behind must not
+     scroll. Separate classes, so closing one never unlocks the other. */
+  .is-menu-open,
+  .has-lightbox {
+    overflow: hidden;
+  }
+
+  /* Section reveal (hooks/useReveal.js). Scoped to .js so content is never hidden
+     if scripts fail. */
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(10px);
+    transition:
+      opacity var(--duration-slow) var(--ease-out),
+      transform var(--duration-slow) var(--ease-out);
+  }
+
+  .js [data-reveal='in'] {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ── Theme change animations (driven by hooks/useTheme.js) ── */
+
+  /* Circular reveal (View Transitions API). The browser cross-fades the old and
+     new snapshots of the page by default; that is switched off here, because
+     useTheme animates a growing circular clip on the new snapshot instead. The
+     old page stays put underneath while the new one is revealed over it. */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  /* The snapshots are only a picture laid over the page for under half a second.
+     Letting pointer events through keeps clicks and scrolling working meanwhile. */
+  ::view-transition {
+    pointer-events: none;
+  }
+
+  /* Cross-fade (the fallback): applied briefly so every color eases to its new
+     value together instead of snapping. */
+  .theme-switching *,
+  .theme-switching *::before,
+  .theme-switching *::after {
+    transition:
+      background-color var(--duration-theme) var(--ease-out),
+      color var(--duration-theme) var(--ease-out),
+      border-color var(--duration-theme) var(--ease-out),
+      box-shadow var(--duration-theme) var(--ease-out),
+      fill var(--duration-theme) var(--ease-out),
+      stroke var(--duration-theme) var(--ease-out) !important;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+
+    .js [data-reveal] {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+/* ── Loading screen walker ─────────────────────────────────────── */
+
+/* A small pixel character walking in the bottom-right corner of the loading
+   screen (#loader in index.html), standing on the loading indicator's hairline.
+   The rest of that screen is styled inline in index.html; this sits here, with the
+   other site styles, because it is only an image and its motion. The stylesheet
+   is linked in the page's <head>, so the walker is styled at first paint.
+
+   One image holds its two frames side by side (standing, then mid-stride), each
+   32×69 sprite pixels; the animation steps across one frame at a time. It is
+   drawn at a whole-number scale and never smoothed. */
+.intro-walker {
+  --walker-scale: 2;
+
+  position: absolute;
+  right: var(--intro-pad);
+  bottom: calc(var(--intro-pad) + env(safe-area-inset-bottom, 0px) + 1px);
+  width: calc(32px * var(--walker-scale));
+  height: calc(69px * var(--walker-scale));
+  background-image: url('../../assets-source/sprites/character-walk.png');
+  background-repeat: no-repeat;
+  background-size: calc(64px * var(--walker-scale)) calc(69px * var(--walker-scale));
+  image-rendering: pixelated;
+  opacity: 0;
+  transition: opacity 0.5s ease-out;
+}
+
+/* On the dark theme the black hair and trousers would sink into the page, so a
+   hairline traces the figure. It outlines; it does not alter the pixels. */
+[data-theme='dark'] .intro-walker {
+  filter: drop-shadow(0 0 0.7px rgba(255, 255, 255, 0.7))
+    drop-shadow(0 0 0.7px rgba(255, 255, 255, 0.45));
+}
+
+/* Smaller where the name and title need the room. */
+@media (max-width: 599px), (max-height: 699px) {
+  .intro-walker {
+    --walker-scale: 1;
+  }
+}
+
+/* Fades in with the screen's labels once the fonts are in (a transition, so the
+   exit can fade it out again), and walks for as long as the screen is up. */
+.intro[data-fonts='ready'] .intro-walker {
+  opacity: 1;
+  animation: intro-walk 0.84s steps(2) infinite;
+}
+
+/* Exit: lifts away with the screen's content, before the panel slides up. */
+.intro.is-leaving .intro-walker {
+  opacity: 0;
+  transform: translateY(-18px);
+  transition:
+    opacity 0.35s ease-out,
+    transform 0.5s var(--intro-ease);
+}
+
+/* Failure state: hidden with the loading indicator. */
+.intro[data-state='error'] .intro-walker {
+  display: none;
+}
+
+/* Reduced motion: it stands still (the screen's inline styles stop every
+   animation and transition in it). */
+@media (prefers-reduced-motion: reduce) {
+  .intro-walker {
+    opacity: 1;
+  }
+}
+
+@keyframes intro-walk {
+  to {
+    background-position-x: calc(-64px * var(--walker-scale));
+  }
+}
+
+/* ── Shared text and control styles ────────────────────────────── */
+
+/* Small uppercase mono metadata: section labels, dates, counters. */
+@utility mono-label {
+  @apply font-mono text-micro font-normal tracking-[0.08em] text-muted uppercase;
+}
+
+/* An inline text link: a quiet underline that darkens on hover. */
+@utility link {
+  @apply underline decoration-border-strong decoration-1 underline-offset-4 transition-[text-decoration-color] duration-(--duration-fast) ease-out hover:decoration-fg;
+}
+
+/* A bordered mono chip (project labels and technologies). */
+@utility tag {
+  @apply inline-block rounded-sm border border-border px-2 py-0.75 font-mono text-micro leading-[1.5] tracking-[0.04em] whitespace-nowrap text-muted;
+}
+
+/* A square outlined button holding one icon. */
+@utility icon-button {
+  @apply inline-grid size-9 place-items-center rounded-md border border-border text-fg transition-[background-color,border-color] duration-(--duration-fast) ease-out hover:border-border-strong hover:bg-surface-strong;
+}
