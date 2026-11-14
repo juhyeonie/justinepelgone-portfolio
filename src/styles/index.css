@@ -226,6 +226,9 @@
   html {
     scroll-behavior: smooth;
     scroll-padding-top: var(--header-offset);
+    /* While the tour's chat bubble is docked at the bottom of a small screen, the
+       tour's scrolling keeps content clear of it (set by TourGuide.jsx). */
+    scroll-padding-bottom: var(--tour-dock-reserve, 0px);
     -webkit-tap-highlight-color: initial; /* Preflight turns tap highlights off */
   }
 
@@ -416,6 +419,7 @@
 }
 
 /* A square outlined button holding one icon. */
+/* On touch screens an invisible ::before grows the 36px button's tap area to 44px. */
 @utility icon-button {
-  @apply inline-grid size-9 place-items-center rounded-md border border-border text-fg transition-[background-color,border-color] duration-(--duration-fast) ease-out hover:border-border-strong hover:bg-surface-strong;
+  @apply relative inline-grid size-9 touch:before:absolute touch:before:-inset-1 touch:before:content-[''] place-items-center rounded-md border border-border text-fg transition-[background-color,border-color] duration-(--duration-fast) ease-out hover:border-border-strong hover:bg-surface-strong;
 }

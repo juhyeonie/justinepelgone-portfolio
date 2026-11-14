@@ -166,28 +166,70 @@ function getBeatBox(element, isPress) {
   return pointBox(line.right, y, line.height);
 }
 
+// The space a docked chat bubble takes at the bottom of the screen (with room
+// for the pointer above it), published as --tour-dock-reserve. The page's
+// scroll-padding-bottom reads it (see index.css), so every scroll the tour makes
+// (scrollIntoView, and the step scrolls in utils/scroll.js) keeps what it
+// brings into view clear of the bubble, the way scroll-padding-top keeps it
+// clear of the top bar.
+const DOCK_RESERVE_PROPERTY = '--tour-dock-reserve';
+
+function setDockReserve(px) {
+  const root = document.documentElement.style;
+  const value = `${Math.round(px)}px`;
+  if (!px) root.removeProperty(DOCK_RESERVE_PROPERTY);
+  else if (root.getPropertyValue(DOCK_RESERVE_PROPERTY) !== value) {
+    root.setProperty(DOCK_RESERVE_PROPERTY, value);
+  }
+}
+
+// The height of the screen left for content: below the top bar, above the
+// docked bubble.
+function getViewingHeight() {
+  const reserve = parseFloat(getComputedStyle(document.documentElement).scrollPaddingBottom) || 0;
+  return window.innerHeight - getHeaderOffset() - reserve;
+}
+
+// The slider a beat's element belongs to (its cards and its buttons together).
+function getSlider(element) {
+  return element.closest('[data-tour-anchor$="-showcase"]');
+}
+
+// Whether a press on a slider's button can be shown with the slider's front item
+// on screen at the same time. When it can't (a short landscape phone), the cursor
+// stays on that item and presses the button from there, rather than scrolling
+// the page away to the button and back.
+function canShowWithSlider(element) {
+  const slider = getSlider(element);
+  if (!slider) return true;
+  const active = slider.querySelector('[data-position="active"], [data-active]');
+  const box = active?.getBoundingClientRect() ?? element.getBoundingClientRect();
+  const button = element.getBoundingClientRect();
+  return Math.max(box.bottom, button.bottom) - Math.min(box.top, button.top) <= getViewingHeight();
+}
+
 // Brings a beat's element into view before the cursor heads for it, so it never
-// points at (or presses) something off screen:
+// points at (or presses) something off screen, with as little page movement as
+// possible:
 // - sideways: a project card further along the swipeable row on phones (scrolling
 //   the row is how the row itself changes project, so it stays in step);
-// - up or down: on small screens a slider's buttons can sit below the fold, or
-//   behind the chat bubble docked at the bottom (`bottomReserve` px).
-function revealElement(element, bottomReserve) {
-  const rect = element.getBoundingClientRect();
+// - up or down: the whole slider (its cards and its buttons) is framed at once,
+//   if it fits on screen, so moving between a card and the Next button never
+//   scrolls the page back and forth. Otherwise just the element itself.
+// Both are the nearest scroll that shows it whole, clear of the top bar and the
+// docked bubble (scroll-padding).
+function revealElement(element) {
   const behavior = prefersReducedMotion() ? 'auto' : 'smooth';
+  const rect = element.getBoundingClientRect();
 
   if (rect.left < 0 || rect.right > window.innerWidth) {
     element.scrollIntoView({ inline: 'center', block: 'nearest', behavior });
     return;
   }
 
-  const top = getHeaderOffset() + EDGE_MARGIN;
-  const bottom = window.innerHeight - bottomReserve;
-  if (rect.top >= top && rect.bottom <= bottom) return;
-
-  // Centre it in the space left between the header and the bubble.
-  const shift = rect.top + rect.height / 2 - (top + bottom) / 2;
-  window.scrollBy({ top: shift, behavior });
+  const slider = getSlider(element);
+  const fitsWhole = slider && slider.getBoundingClientRect().height <= getViewingHeight();
+  (fitsWhole ? slider : element).scrollIntoView({ block: 'nearest', inline: 'nearest', behavior });
 }
 
 export default function TourGuide({
@@ -225,6 +267,9 @@ export default function TourGuide({
   if (activeStep) lastStep.current = activeStep;
   const [hasExited, setHasExited] = useState(true);
   const step = activeStep ?? (hasExited ? null : lastStep.current);
+
+  // The bubble's reserved space goes with the guide.
+  useEffect(() => () => setDockReserve(0), []);
 
   // How it is going: 'leave' (the tour completed: glide away), 'dismiss' (skipped,
   // or reduced motion: a quick fade), or null while the tour is running.
@@ -277,6 +322,7 @@ export default function TourGuide({
       tipPosition.current = null;
       entrance.current = null;
       setIsEntering(false);
+      setDockReserve(0);
       return undefined;
     }
 
@@ -284,6 +330,7 @@ export default function TourGuide({
     // (and the bubble attached to it) off the right edge; CSS fades it meanwhile.
     if (exitMode) {
       entrance.current = null;
+      setDockReserve(0);
       const pointer = pointerRef.current;
       const start = tipPosition.current;
       if (exitMode !== 'leave' || !pointer || !start) return undefined;
@@ -400,6 +447,7 @@ export default function TourGuide({
         run.phase = 'travel';
         run.since = time;
         run.hasRevealed = false;
+        run.isRemotePress = false;
         if (run.index < beats.length - 1) {
           run.index += 1;
         } else {
@@ -416,12 +464,9 @@ export default function TourGuide({
       if (run.phase === 'travel') {
         if (!run.hasRevealed) {
           run.hasRevealed = true;
-          const bubbleHeight = bubbleRef.current?.getBoundingClientRect().height ?? 0;
-          // For a card, what matters is its title, where the cursor will point.
-          revealElement(
-            element.querySelector('[data-tour-point]') ?? element,
-            isCompact ? bubbleHeight + DOCKED_BUBBLE_GAP + EDGE_MARGIN : EDGE_MARGIN,
-          );
+          run.isRemotePress = Boolean(beat.press) && !canShowWithSlider(element);
+          // A remote press scrolls nothing: the cursor stays where it is.
+          if (!run.isRemotePress) revealElement(element);
         }
         if (hasArrived || elapsed > MAX_TRAVEL_MS) {
           run.phase = beat.press ? 'press' : 'hold';
@@ -452,6 +497,10 @@ export default function TourGuide({
         nextBeat();
       }
 
+      // A remote press points at the slider's front item instead of the button.
+      if (run.isRemotePress) {
+        return getSlider(element)?.querySelector('[data-position="active"], [data-active]') ?? element;
+      }
       return element;
     };
 
@@ -466,7 +515,7 @@ export default function TourGuide({
       if (beats) {
         anchor = runBeats(time, hasArrived);
         const beat = beats[beatProgress.current.index];
-        if (anchor) anchorBox = getBeatBox(anchor, beat.press);
+        if (anchor) anchorBox = getBeatBox(anchor, beat.press && !beatProgress.current.isRemotePress);
         setHighlight(anchor);
       } else {
         // A group step visits its elements one after another and rests on the last.
@@ -513,6 +562,11 @@ export default function TourGuide({
             ? `${(viewportHeight - groupTop + DOCKED_BUBBLE_LIFT).toFixed(1)}px`
             : '';
         }
+        // What the docked bubble covers, for the tour's own scrolling (see
+        // setDockReserve): the bubble, the pointer's room above it and a margin.
+        setDockReserve(
+          isCompact && !isBubbleLifted ? viewportHeight - bottomLimit + EDGE_MARGIN : 0,
+        );
         const blend = isReducedMotion ? 1 : 1 - Math.exp(-(time - previousTime) / FOLLOW_TIME_MS);
 
         // While the target is on screen these clamps do nothing and the tip sits
