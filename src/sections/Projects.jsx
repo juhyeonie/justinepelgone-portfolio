@@ -32,7 +32,9 @@ export default function Projects() {
           <button
             key={id}
             type="button"
-            className="rounded-[5px] px-3 py-1.25 text-sm font-medium text-muted transition-[background-color,color] duration-(--duration-fast) ease-out hover:text-fg aria-pressed:bg-fg aria-pressed:text-bg"
+            // The side padding narrows below 364px so the three filters stay on one
+            // line at 320px; on touch screens a ::before makes each 45px tall to tap.
+            className="relative rounded-[5px] px-[min(--spacing(3),3.2vw)] py-1.25 text-sm font-medium text-muted transition-[background-color,color] duration-(--duration-fast) ease-out hover:text-fg aria-pressed:bg-fg aria-pressed:text-bg touch:before:absolute touch:before:inset-x-0 touch:before:-inset-y-1.5 touch:before:content-['']"
             aria-pressed={filter === id}
             onClick={() => setFilter(id)}
           >

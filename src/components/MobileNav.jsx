@@ -112,7 +112,7 @@ export default function MobileNav({ activeId, themePreference, onThemeChange, so
         <button
           ref={menuButtonRef}
           type="button"
-          className="relative icon-button"
+          className="icon-button"
           aria-expanded={isOpen}
           aria-controls="mobile-menu"
           aria-label={isOpen ? 'Close menu' : 'Open menu'}
