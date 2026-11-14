@@ -2,7 +2,8 @@
 
 Personal portfolio of Justine Pelgone, Developer & UI/UX Designer.
 
-**Live site:** https://justine-pelgone.vercel.app
+- **Live site:** https://justine-pelgone.vercel.app
+- **Repository:** https://github.com/juhyeonie/justinepelgone-portfolio
 
 ## Built with
 
@@ -13,6 +14,8 @@ Personal portfolio of Justine Pelgone, Developer & UI/UX Designer.
 ## Run it locally
 
 ```bash
+git clone https://github.com/juhyeonie/justinepelgone-portfolio.git
+cd justinepelgone-portfolio
 npm install
 npm run dev
 ```
