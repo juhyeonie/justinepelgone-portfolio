@@ -4,8 +4,11 @@ import { MousePointer2, RotateCcw } from 'lucide-react';
 //
 // While the tour is running, Skip is the only tour control on screen, so this
 // button is hidden. It keeps its place in the layout while hidden, so the groups
-// around it do not shift when a tour starts or ends.
+// around it do not shift when a tour starts or ends. On a device without a
+// hovering pointer there is no tour, so there is no button either.
 export default function TourButton({ tour, onStart }) {
+  if (!tour.isSupported) return null;
+
   const Icon = tour.hasSeenTour ? RotateCcw : MousePointer2;
 
   const handleClick = () => {

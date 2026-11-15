@@ -69,16 +69,20 @@ export default function App() {
         <Footer />
       </div>
 
-      <TourGuide
-        status={tour.status}
-        step={tour.step}
-        stepKey={tour.stepKey}
-        isMessageShown={tour.isMessageShown}
-        onSkip={tour.skip}
-        onMessageStarted={tour.markMessageStarted}
-        onMessageShown={tour.markMessageShown}
-        onBeatsDone={tour.finishBeats}
-      />
+      {/* On a touch-only device the guide is not rendered at all: no cursor, bubble
+          or animation loop (see TOUR_DEVICE_QUERY in useTour.js). */}
+      {tour.isSupported && (
+        <TourGuide
+          status={tour.status}
+          step={tour.step}
+          stepKey={tour.stepKey}
+          isMessageShown={tour.isMessageShown}
+          onSkip={tour.skip}
+          onMessageStarted={tour.markMessageStarted}
+          onMessageShown={tour.markMessageShown}
+          onBeatsDone={tour.finishBeats}
+        />
+      )}
     </>
   );
 }
