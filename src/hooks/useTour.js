@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import { getStepDuration, tourSteps } from '../data/tourSteps';
+import { useMediaQuery } from './useMediaQuery';
 import {
   getSectionInView,
   isTourAnchorInView,
@@ -25,6 +26,14 @@ import {
 // A step with `beats` (see tourSteps.js) has no reading timer: the guide performs
 // its beats after the message is typed and reports when the last one is done
 // (`finishBeats`), so the cursor, the page and the next message never drift apart.
+
+// The guide is a cursor that points, hovers and clicks, so it only runs where the
+// visitor has a pointer like it: a mouse or trackpad that can hover. This asks
+// about every input, not just the primary one, so a touch laptop or a tablet with
+// a trackpad attached qualifies, while a touch-only phone or tablet does not
+// (whatever its screen width). Where it does not match, the tour never starts and
+// none of its parts are rendered (see App.jsx and TourButton.jsx).
+export const TOUR_DEVICE_QUERY = '(any-hover: hover) and (any-pointer: fine)';
 
 const SETTLE_DELAY_MS = 2500; // quiet time after the last interaction before resuming
 const MIN_REMAINING_MS = 1500; // a resumed message stays readable for at least this long
@@ -114,6 +123,7 @@ function tourReducer(state, action) {
 
 export function useTour({ isEnabled }) {
   const [state, dispatch] = useReducer(tourReducer, initialState);
+  const isSupported = useMediaQuery(TOUR_DEVICE_QUERY);
   // Whether a tour has started since this page was loaded. It only decides whether
   // the button reads "Take a tour" or "Replay tour"; nothing about the tour is
   // remembered between visits.
@@ -133,14 +143,21 @@ export function useTour({ isEnabled }) {
   const isActive = status === 'running' || status === 'paused';
 
   // Every visit: start automatically once the page is ready, for new and returning
-  // visitors alike. The guard makes it happen exactly once per page load, so
-  // nothing a visitor does afterwards (navigating between sections, skipping,
-  // finishing) can start it again on its own; from then on only Replay does.
+  // visitors alike, on a device that supports the guide. The guard makes this
+  // decision exactly once per page load, so nothing a visitor does afterwards
+  // (navigating between sections, skipping, finishing, plugging in a mouse) can
+  // start it again on its own; from then on only Replay does.
   useEffect(() => {
     if (!isEnabled || hasAutoStarted.current) return;
     hasAutoStarted.current = true;
-    dispatch({ type: 'start' });
-  }, [isEnabled]);
+    if (isSupported) dispatch({ type: 'start' });
+  }, [isEnabled, isSupported]);
+
+  // The device stops supporting the guide mid-tour (a tablet's trackpad was
+  // detached): end it, which also removes its listeners and timers below.
+  useEffect(() => {
+    if (!isSupported) dispatch({ type: 'skip' });
+  }, [isSupported]);
 
   useEffect(() => {
     if (status !== 'idle') setHasSeenTour(true);
@@ -274,9 +291,10 @@ export function useTour({ isEnabled }) {
   }, [isActive]);
 
   const start = useCallback(() => {
+    if (!isSupported) return;
     clearTimeout(settleTimer.current);
     dispatch({ type: 'start' });
-  }, []);
+  }, [isSupported]);
 
   const skip = useCallback(() => dispatch({ type: 'skip' }), []);
 
@@ -308,6 +326,8 @@ export function useTour({ isEnabled }) {
   return {
     status,
     isActive,
+    // Whether this device can run the guide at all (see TOUR_DEVICE_QUERY).
+    isSupported,
     hasSeenTour,
     step: isActive ? tourSteps[stepIndex] : null,
     // Identifies this showing of the step, so the guide restarts its beats when

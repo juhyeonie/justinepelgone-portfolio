@@ -33,9 +33,11 @@ export default function Sidebar({ activeId, themePreference, onThemeChange, soun
       <SectionNav activeId={activeId} />
 
       <div className="mt-auto">
-        <div className={groupClass}>
-          <TourButton tour={tour} />
-        </div>
+        {tour.isSupported && (
+          <div className={groupClass}>
+            <TourButton tour={tour} />
+          </div>
+        )}
 
         <div className={groupClass}>
           <SocialLinks />
