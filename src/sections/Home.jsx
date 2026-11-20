@@ -41,7 +41,9 @@ export default function Home({ greetingCue = null }) {
         )}
 
         <div>
-          <h1 id="home-heading" className="text-hero leading-[1.08] font-bold tracking-[-0.035em]">
+          {/* Focusable from script only (tabIndex -1): Back to top moves keyboard
+              focus here. It is not a control, so it shows no focus ring. */}
+          <h1 id="home-heading" className="text-hero leading-[1.08] font-bold tracking-[-0.035em] outline-none" tabIndex={-1}>
             {/* The span hugs the text, so the tour's cursor rests on the end of the
                 name rather than the end of the full-width heading box. */}
             <span data-tour-anchor="home">{profile.name}</span>

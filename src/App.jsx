@@ -1,3 +1,4 @@
+import BackToTop from './components/BackToTop';
 import Footer from './components/Footer';
 import MobileNav from './components/MobileNav';
 import Sidebar from './components/Sidebar';
@@ -68,6 +69,8 @@ export default function App() {
         </main>
         <Footer />
       </div>
+
+      <BackToTop isSuppressed={tour.isActive} />
 
       {/* On a touch-only device the guide is not rendered at all: no cursor, bubble
           or animation loop (see TOUR_DEVICE_QUERY in useTour.js). */}
