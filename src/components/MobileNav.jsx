@@ -1,4 +1,4 @@
-import { Mail, Menu, X } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { contact, contactLinks, profile } from '../data/content';
 import { iconProps } from './Icons';
@@ -9,19 +9,24 @@ import ThemeSwitcher from './ThemeSwitcher';
 import TotalLove from './TotalLove';
 import TourButton from './TourButton';
 
-// Navigation below 1024px, where the desktop sidebar is hidden: a menu button
-// fixed in the top-left corner, opening the sidebar as a full-screen overlay.
+// Navigation below 1024px, where the desktop sidebar is hidden: a floating
+// frosted-glass pill at the top of the window (menu icon and name), opening the
+// sidebar as a full-screen overlay.
+//
+// The pill is the one menu toggle: it stays above the open overlay and its three
+// lines turn into a cross, so opening and closing happen in the same place.
 //
 // The overlay is the desktop sidebar adapted to a phone: the same pieces in the
-// same order. Top: who this is, with the close button on the right. Middle
-// (scrolls if the screen is short): Index, Elsewhere, and the tour. Foot, pinned:
-// Total Love, appearance and sound, and the contact note. Rows are the larger
-// touch size of the same components (`isLarge`).
+// same order. Top: room for the pill, then the role. Middle (scrolls if the
+// screen is short): Index, Elsewhere, and the tour. Foot, pinned: Total Love,
+// appearance and sound, and the contact note. Rows are the larger touch size of
+// the same components (`isLarge`).
 //
 // It is always in the DOM and switched with `data-open`, which lets its classes
 // animate it both in and out; while closed it is `inert`, so nothing in it can be
-// focused or clicked. It closes from the close button, a link, or Escape; tapping
-// anywhere else inside it never closes it by accident.
+// focused or clicked. While open, the page behind is `inert` instead. It closes
+// from the pill, a link, or Escape; tapping anywhere else inside it never closes
+// it by accident.
 
 const DESKTOP_QUERY = '(min-width: 1024px)';
 
@@ -31,17 +36,20 @@ const DESKTOP_QUERY = '(min-width: 1024px)';
 const menuItemClass =
   'translate-y-2.5 opacity-0 transition-[opacity,translate] duration-200 ease-out in-data-[open=true]:translate-y-0 in-data-[open=true]:opacity-100 in-data-[open=true]:delay-[calc(60ms+var(--item-index,0)*35ms)] in-data-[open=true]:duration-450 motion-reduce:translate-none! motion-reduce:delay-0!';
 
+// One line of the menu icon. Reduced motion: the icon swaps without moving.
+const menuLineClass =
+  'absolute inset-x-0.5 h-[1.5px] rounded-full bg-current transition-[translate,rotate,scale,opacity] duration-300 ease-(--ease-out) motion-reduce:transition-none';
+
 export default function MobileNav({ activeId, themePreference, onThemeChange, sounds, tour }) {
   const [isOpen, setIsOpen] = useState(false);
   // True when the guided tour opened the menu (for its final step) rather than
   // the visitor. A menu the visitor opened puts the tour on hold; this one does not.
   const [wasOpenedByTour, setWasOpenedByTour] = useState(false);
   const menuButtonRef = useRef(null);
-  const closeButtonRef = useRef(null);
   const wasOpen = useRef(false);
 
   const closeMenu = useCallback(() => setIsOpen(false), []);
-  // Closing from the close button or Escape: focus goes back to the menu button.
+  // Closing with Escape: focus goes back to the pill (if it was elsewhere).
   const closeAndReturnFocus = useCallback(() => {
     setIsOpen(false);
     menuButtonRef.current?.focus();
@@ -71,7 +79,8 @@ export default function MobileNav({ activeId, themePreference, onThemeChange, so
   }, [isOpen, tourNeedsMenu, skipTour]);
 
   // While the menu is open: lock background scrolling, take the page behind it
-  // out of the tab order, move focus into the menu, and listen for Escape.
+  // out of the tab order, and listen for Escape. Focus stays on the pill, which
+  // is now the close button; the menu's links come right after it.
   useEffect(() => {
     if (!isOpen) return undefined;
 
@@ -90,22 +99,15 @@ export default function MobileNav({ activeId, themePreference, onThemeChange, so
       element.inert = true;
     });
     document.addEventListener('keydown', handleKeyDown);
-    // The menu button is now covered by the overlay, so focus moves to the close
-    // button (on the next frame, once the overlay is no longer inert). Not when
-    // the tour opened the menu: it is only showing, not handing over control.
-    const frame = wasOpenedByTour
-      ? 0
-      : requestAnimationFrame(() => closeButtonRef.current?.focus({ preventScroll: true }));
 
     return () => {
-      cancelAnimationFrame(frame);
       root.classList.remove('is-menu-open');
       background.forEach((element) => {
         element.inert = false;
       });
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, wasOpenedByTour, closeAndReturnFocus]);
+  }, [isOpen, closeAndReturnFocus]);
 
   // If the window grows to desktop width while the menu is open, close it, so the
   // scroll lock can never be left behind with no visible way to release it.
@@ -123,16 +125,27 @@ export default function MobileNav({ activeId, themePreference, onThemeChange, so
 
   return (
     <header className="hidden max-lg:block" data-open={isOpen}>
+      {/* The pill: the full window width less a 12px margin each side (or the
+          safe area), icon and name on the left. Frosted glass: translucent
+          surface + backdrop blur, nearly opaque where blur is unsupported, so the
+          name stays readable over the forest; a faint border in the text colour.
+          Its accessible name is the visible name plus "menu". */}
       <button
         ref={menuButtonRef}
         type="button"
-        className="fixed top-[max(12px,env(safe-area-inset-top))] left-[max(12px,env(safe-area-inset-left))] z-40 grid size-11 place-items-center rounded-xl border border-border bg-surface text-fg shadow-[0_1px_2px_rgb(0_0_0/0.05)] transition-[border-color,background-color] duration-(--duration-fast) ease-out pointer-hover:border-border-strong pointer-hover:bg-surface-strong"
+        className="fixed top-[calc(10px+env(safe-area-inset-top))] right-[max(12px,env(safe-area-inset-right))] left-[max(12px,env(safe-area-inset-left))] z-50 flex h-11 items-center gap-2.5 rounded-full border border-fg/10 bg-surface/95 pr-5 pl-4 text-sm font-semibold tracking-[-0.01em] text-fg shadow-[inset_0_1px_0_rgb(255_255_255/0.7),0_1px_2px_rgb(0_0_0/0.05),0_10px_28px_-12px_rgb(0_0_0/0.2)] backdrop-blur-xl backdrop-saturate-180 transition-[background-color,border-color,box-shadow] duration-(--duration-fast) ease-out supports-backdrop-filter:bg-surface/65 dark:border-fg/12 dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.06),0_10px_28px_-12px_rgb(0_0_0/0.7)] pointer-hover:bg-surface/85"
         aria-expanded={isOpen}
         aria-controls="mobile-menu"
-        aria-label="Open menu"
-        onClick={() => setIsOpen(true)}
+        onClick={() => setIsOpen((open) => !open)}
       >
-        <Menu size={18} strokeWidth={1.75} />
+        {/* Three lines that fold into a cross while the menu is open. */}
+        <span className="relative size-4.5 flex-none" aria-hidden="true">
+          <span className={`${menuLineClass} top-1 in-data-[open=true]:translate-y-[4.25px] in-data-[open=true]:rotate-45`} />
+          <span className={`${menuLineClass} top-[8.25px] in-data-[open=true]:scale-x-0 in-data-[open=true]:opacity-0`} />
+          <span className={`${menuLineClass} top-[12.5px] in-data-[open=true]:-translate-y-[4.25px] in-data-[open=true]:-rotate-45`} />
+        </span>
+        <span className="truncate">{profile.name}</span>
+        <span className="sr-only"> menu</span>
       </button>
 
       {/* The sidebar, full screen (100dvh where supported, so it also fills the
@@ -140,30 +153,18 @@ export default function MobileNav({ activeId, themePreference, onThemeChange, so
       <div
         id="mobile-menu"
         className="invisible fixed inset-0 z-45 h-screen w-screen overflow-y-auto overscroll-contain bg-surface opacity-0 [transition:opacity_0.25s_var(--ease-out),visibility_0s_linear_0.25s] in-data-[open=true]:visible in-data-[open=true]:opacity-100 in-data-[open=true]:delay-0 supports-[height:100dvh]:h-dvh"
-        role="dialog"
-        aria-modal="true"
+        role="region"
         aria-label="Menu"
         inert={!isOpen}
         data-tour-hold={isOpen && !wasOpenedByTour ? '' : undefined}
       >
         <div className="mx-auto flex min-h-full w-full max-w-[560px] flex-col pr-[env(safe-area-inset-right)] pl-[env(safe-area-inset-left)]">
-          {/* Top: who this is, and the close button. Stays in view if the menu scrolls. */}
-          <div className="sticky top-0 z-1 flex items-start justify-between gap-4 bg-surface pt-[max(16px,env(safe-area-inset-top))] pr-3 pb-3 pl-5">
-            <div className={`${menuItemClass} min-w-0 pt-2`} style={{ '--item-index': 0 }}>
-              <a href="#home" className="text-[1.0625rem] font-semibold tracking-[-0.015em]" onClick={closeMenu}>
-                {profile.name}
-              </a>
-              <p className="mt-0.5 text-sm text-muted">{profile.role}</p>
-            </div>
-            <button
-              ref={closeButtonRef}
-              type="button"
-              className="icon-button size-11 flex-none border-transparent"
-              aria-label="Close menu"
-              onClick={closeAndReturnFocus}
-            >
-              <X size={20} strokeWidth={1.75} />
-            </button>
+          {/* Top: room for the pill (which floats above the menu), then the role
+              under the name it shows. Stays in view if the menu scrolls. */}
+          <div className="sticky top-0 z-1 bg-surface pt-(--header-offset) pr-3 pb-3 pl-5">
+            <p className={`${menuItemClass} text-sm text-muted`} style={{ '--item-index': 0 }}>
+              {profile.role}
+            </p>
           </div>
 
           {/* Middle: the same groups as the sidebar. */}
