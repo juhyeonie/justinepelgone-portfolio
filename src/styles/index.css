@@ -229,7 +229,8 @@
 
 @media (max-width: 1023px) {
   :root {
-    --header-offset: 64px; /* the floating top bar: 8px inset + 48px + 8px gap */
+    /* The floating pill navbar: 10px inset + 44px + 10px gap, below any notch. */
+    --header-offset: calc(64px + env(safe-area-inset-top));
     --section-space: 72px;
     --gutter: 24px;
   }
