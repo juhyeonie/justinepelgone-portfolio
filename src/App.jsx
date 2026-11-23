@@ -1,5 +1,6 @@
 import BackToTop from './components/BackToTop';
 import Footer from './components/Footer';
+import Forest from './components/Forest';
 import MobileNav from './components/MobileNav';
 import Sidebar from './components/Sidebar';
 import TourGuide from './components/TourGuide';
@@ -7,6 +8,7 @@ import { sections } from './data/content';
 import { useActiveSection } from './hooks/useActiveSection';
 import { useAppReady } from './hooks/useAppReady';
 import { useInterfaceSounds } from './hooks/useInterfaceSounds';
+import { usePressFeedback } from './hooks/usePressFeedback';
 import { useReveal } from './hooks/useReveal';
 import { useTheme } from './hooks/useTheme';
 import { useTour } from './hooks/useTour';
@@ -35,6 +37,7 @@ export default function App() {
   const activeId = useActiveSection(sectionIds);
   const tour = useTour({ isEnabled: isReady });
   const sounds = useInterfaceSounds();
+  usePressFeedback();
   useReveal();
 
   const navProps = {
@@ -55,6 +58,7 @@ export default function App() {
         Skip to content
       </a>
 
+      <Forest />
       <Sidebar {...navProps} />
       <MobileNav {...navProps} />
 

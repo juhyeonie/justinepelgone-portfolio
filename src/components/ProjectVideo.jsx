@@ -6,7 +6,7 @@ const controlIconProps = { size: 14, strokeWidth: 1.75, 'aria-hidden': true, foc
 
 // Compact square icon buttons over the video's corner.
 const controlClass =
-  'grid size-7 place-items-center rounded-sm border border-border bg-bg text-fg transition-[background-color,border-color,scale] duration-(--duration-fast) ease-out hover:border-border-strong hover:bg-surface-strong active:scale-94';
+  'grid size-7 place-items-center rounded-sm border border-border bg-bg text-fg transition-[background-color,border-color] duration-(--duration-fast) ease-out hover:border-border-strong hover:bg-surface-strong';
 
 // A project's promotional video. It plays muted and looped while its card is the
 // active one and on screen, and pauses otherwise. Visitors can pause it or turn

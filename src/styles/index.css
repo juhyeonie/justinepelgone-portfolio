@@ -27,6 +27,14 @@
 /* The theme is set on <html> as data-theme (see useTheme.js), not by media query. */
 @custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
 
+/* A phone turned sideways: wide but very short (the full-screen mobile menu
+   stops pinning its foot there). */
+@custom-variant short-landscape {
+  @media (orientation: landscape) and (max-height: 500px) {
+    @slot;
+  }
+}
+
 /* ── Theme ─────────────────────────────────────────────────────── */
 
 @theme {
@@ -133,7 +141,11 @@
 
 :root {
   /* Spacing and layout */
-  --sidebar-width: 256px;
+  /* The desktop sidebar floats: a panel inset from the window's edges. The
+     content's left margin is the panel plus its inset on both sides. */
+  --sidebar-inset: 12px;
+  --sidebar-panel: 256px;
+  --sidebar-width: calc(var(--sidebar-panel) + var(--sidebar-inset) * 2);
   --content-width: 760px;
   --gutter: 32px;
   --section-space: 88px;
@@ -148,6 +160,15 @@
      cards, their fades and their shadows travel together. */
   --duration-slide: 0.5s;
   --duration-hover: 0.22s; /* hover lifts and zooms, independent of slide moves */
+
+  /* Press feedback, the same for everything clickable (usePressFeedback.js): a
+     quick sink in, then a slower, smooth return with no overshoot. Small
+     controls scale to --press-scale; larger ones sink by about --press-travel. */
+  --press-scale: 0.96;
+  --press-travel: 6px;
+  --duration-press: 0.1s;
+  --duration-release: 0.32s;
+  --ease-press: cubic-bezier(0.3, 0, 0.5, 1);
 
   /* Tour guide: a Figma-style collaborator cursor. One solid color for the pointer
      and its chat bubble, with contrasting text. It follows the monochrome theme
@@ -182,6 +203,7 @@
   --graph-2: #969696;
   --graph-3: #575757;
   --graph-4: #0a0a0a;
+  --forest-opacity: 0.05; /* the fixed forest background, faded so text over it stays readable */
 }
 
 [data-theme='dark'] {
@@ -202,11 +224,12 @@
   --graph-2: #6e6e6e;
   --graph-3: #adadad;
   --graph-4: #ffffff;
+  --forest-opacity: 0.05;
 }
 
 @media (max-width: 1023px) {
   :root {
-    --header-offset: 56px;
+    --header-offset: 64px; /* the floating top bar: 8px inset + 48px + 8px gap */
     --section-space: 72px;
     --gutter: 24px;
   }

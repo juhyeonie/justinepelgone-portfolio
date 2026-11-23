@@ -4,3 +4,7 @@ dist
 *.local
 
 .vercel
+
+# Local secrets (Upstash credentials for the Total Love counter)
+.env
+.env.*

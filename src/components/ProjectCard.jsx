@@ -104,6 +104,8 @@ export default function ProjectCard({
     <article
       className={`group/card relative flex rounded-card border border-border bg-bg ${position ? stackCardClass : ''}`}
       data-sound="bubble"
+      // What a press on the side card's overlay button sinks (usePressFeedback).
+      data-press-surface=""
       // The tour guide visits each card in turn, pointing at its title.
       data-tour-anchor={`project-${project.id}`}
       // Which project is in front, in either layout (the tour checks it).
@@ -168,8 +170,10 @@ export default function ProjectCard({
         <button
           type="button"
           className="absolute inset-0 cursor-pointer rounded-[inherit] focus-visible:rounded-card focus-visible:outline-offset-2"
-          // It covers the whole card, so it sounds like the card.
+          // It covers the whole card, so it sounds like the card, and a press
+          // sinks the card rather than this transparent layer.
           data-sound="bubble"
+          data-press="parent"
           onClick={onSelect}
           aria-label={`Show project ${number}: ${name}`}
         />
