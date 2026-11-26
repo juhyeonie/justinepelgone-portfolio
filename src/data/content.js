@@ -49,21 +49,14 @@ export const contactLinks = {
 };
 
 // Page sections, in the order they appear. This one list drives the navigation,
-// the order sections render in, and their numbers: each numbered section's number
-// is its position here (Home, the unnumbered intro, is position 0), so reordering
-// this array can never leave the numbering out of step.
-const sectionList = [
+// and the order sections render in. Each section's icon is in Icons.jsx.
+export const sections = [
   { id: 'home', label: 'Home' },
   { id: 'projects', label: 'Projects' },
   { id: 'experience', label: 'Experience' },
   { id: 'stack', label: 'Tech Stack' },
   { id: 'github', label: 'GitHub Activity' },
 ];
-
-export const sections = sectionList.map((section, index) => ({
-  ...section,
-  number: index === 0 ? null : String(index).padStart(2, '0'),
-}));
 
 // Shown in the Projects showcase, in this order. To add a project, add an entry
 // here; the showcase lays out however many there are.
@@ -172,9 +165,9 @@ export const pubmats = [
   ),
 ];
 
-// Experience entries, in display order (they are numbered by position).
+// Experience entries, in display order.
 // `organization` and `context` form the secondary line under the role title.
-// `label` is the small tag beside the number: it says what kind of experience this
+// `label` is the small tag beside the icon: it says what kind of experience this
 // is, so an academic project is never mistaken for employment. No dates are shown
 // unless `period` is set; none are confirmed yet.
 export const experience = [

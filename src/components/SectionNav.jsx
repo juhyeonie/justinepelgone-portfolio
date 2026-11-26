@@ -1,15 +1,6 @@
-import { Activity, BriefcaseBusiness, FolderOpen, House, Layers } from 'lucide-react';
 import { useLayoutEffect, useRef } from 'react';
 import { sections } from '../data/content';
-import { iconProps } from './Icons';
-
-const sectionIcons = {
-  home: House,
-  projects: FolderOpen,
-  experience: BriefcaseBusiness,
-  stack: Layers,
-  github: Activity,
-};
+import { iconProps, sectionIcons } from './Icons';
 
 // One row of the sidebar and the mobile menu (sections and social links alike):
 // an icon, a label, and an optional detail on the right. `isLarge`: the mobile

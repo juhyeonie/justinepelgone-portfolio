@@ -1,6 +1,9 @@
 // Icons. General-purpose icons come from Lucide (import them from 'lucide-react'
 // and spread `iconProps` so every icon shares one size and stroke weight).
-// This file holds the shared props and the few icons Lucide does not provide.
+// This file holds the shared props, the icon for each page section, and the few
+// icons Lucide does not provide.
+
+import { Activity, BriefcaseBusiness, FolderOpen, House, Layers } from 'lucide-react';
 
 // One size and stroke weight for every icon on the site.
 export const iconProps = {
@@ -8,6 +11,16 @@ export const iconProps = {
   strokeWidth: 1.75,
   'aria-hidden': true,
   focusable: false,
+};
+
+// Each page section's icon: in the sidebar, the mobile menu, and beside each
+// section's heading.
+export const sectionIcons = {
+  home: House,
+  projects: FolderOpen,
+  experience: BriefcaseBusiness,
+  stack: Layers,
+  github: Activity,
 };
 
 // Lucide no longer ships brand logos, so these two are drawn here to match it:
