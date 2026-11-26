@@ -1,23 +1,34 @@
+import { BriefcaseBusiness, GraduationCap, UsersRound } from 'lucide-react';
+import { iconProps } from '../components/Icons';
 import Section from '../components/Section';
 import { experience } from '../data/content';
 
-// A numbered list of roles. Each entry: a subtle number and a tag saying what kind
+// The icon for each kind of experience (its `label`); a briefcase otherwise.
+const experienceIcons = {
+  'Academic project': GraduationCap,
+  'Student council': UsersRound,
+};
+
+function ExperienceIcon({ label }) {
+  const Icon = experienceIcons[label] ?? BriefcaseBusiness;
+  return <Icon {...iconProps} />;
+}
+
+// A list of roles. Each entry: an icon and a tag saying what kind
 // of experience it is, then the role title (the prominent element), the
 // organization and academic subject as a secondary line, and a few plain facts.
 export default function Experience() {
   return (
     <Section id="experience">
       <ol>
-        {experience.map((entry, index) => (
+        {experience.map((entry) => (
           <li
             key={entry.title}
             className="grid grid-cols-[148px_minmax(0,1fr)] gap-6 border-b border-border py-6 first:pt-0 max-sm:grid-cols-1 max-sm:gap-2.5"
             data-reveal=""
           >
-            <div className="grid content-start gap-1.5 pt-1.25 max-sm:flex max-sm:flex-wrap max-sm:items-baseline max-sm:gap-x-3.5 max-sm:gap-y-1.5 max-sm:pt-0">
-              <span className="font-mono text-xs leading-[1.4]" aria-hidden="true">
-                {String(index + 1).padStart(2, '0')}
-              </span>
+            <div className="grid content-start gap-1.5 pt-1.25 max-sm:flex max-sm:flex-wrap max-sm:items-center max-sm:gap-x-3.5 max-sm:gap-y-1.5 max-sm:pt-0">
+              <ExperienceIcon label={entry.label} />
               <span className="mono-label">{entry.label}</span>
               {entry.period && <span className="mono-label">{entry.period}</span>}
             </div>

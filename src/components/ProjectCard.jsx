@@ -1,4 +1,6 @@
+import { CassetteTape, ClipboardCheck, FolderOpen } from 'lucide-react';
 import ExternalArrow from './ExternalArrow';
+import { iconProps } from './Icons';
 import ImagePlaceholder from './ImagePlaceholder';
 import ProjectVideo from './ProjectVideo';
 
@@ -82,6 +84,12 @@ function ProjectMedia({ project, isActive, canZoom }) {
 
 // One project, as a card in the showcase.
 //
+// The icon in each card's top corner, by project id; a folder otherwise.
+const projectIcons = {
+  'things-unsaid': CassetteTape, // a mixtape and letter-sharing platform
+  'employee-onboarding-system': ClipboardCheck,
+};
+
 // `position` is where the card sits in the stack: "active" (front and centre),
 // "side" (tucked behind, clickable to bring forward), or "hidden" (further back,
 // out of sight). `offset` is its signed distance from the active card and drives
@@ -97,6 +105,7 @@ export default function ProjectCard({
   onSelect,
 }) {
   const { name, labels, year, description, role, technologies, liveUrl, sourceUrl } = project;
+  const ProjectIcon = projectIcons[project.id] ?? FolderOpen;
   const isInteractive = !position || position === 'active';
   const hasActions = Boolean(liveUrl || sourceUrl);
 
@@ -130,9 +139,8 @@ export default function ProjectCard({
             ))}
             {year && <li className="tag">{year}</li>}
           </ul>
-          <span className="pt-1.25 mono-label" aria-hidden="true">
-            {String(number).padStart(2, '0')}
-          </span>
+          {/* What the project is, as an icon (decorative). */}
+          <ProjectIcon {...iconProps} className="mt-1 flex-none text-muted" />
         </div>
 
         <h3
